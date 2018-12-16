@@ -43,22 +43,28 @@ public class Authorization {
         JOptionPane.showMessageDialog(null, "Fields must be filled!");
         return;
       }
-      int id;
+      int result;
       switch(e.getActionCommand()) {
         case "Sign In":
-          id = UI.bd.findUser(login.getText(), password.getText());
-          if(id > 0) {
+          UIClient.send(("login: " + login.getText() + ",password: " + password.getText() + ",method: findUser").getBytes());
+          //id = UI.bd.findUser(login.getText(), password.getText());
+          result = Integer.parseInt(new String(UIClient.get()).trim());
+          System.out.print(result);
+          if(result > 0) {
             JOptionPane.showMessageDialog(null, "True");
           } else {
             JOptionPane.showMessageDialog(null, "Invalid data entered!");
           }
           break;
         case "Sign Up":
-          id = UI.bd.findLogin(login.getText());
-          if (id > 0) {
+          UIClient.send(("login: " + login.getText() + ",password: " + password.getText() + ",method: findLogin").getBytes());
+          result = Integer.parseInt(new String(UIClient.get()).trim());
+          System.out.print(result);
+          if (result > 0) {
             JOptionPane.showMessageDialog(null, "This login already exists!");
           } else {
-            int result = UI.bd.createUser(login.getText(), password.getText());
+            UIClient.send(("login: " + login.getText() + ",password: " + password.getText() + ",method: createUser").getBytes());
+            result = Integer.parseInt(new String(UIClient.get()).trim());
             if (result > 0) {
               JOptionPane.showMessageDialog(null, "User registered successfully! Sign in. Login will be done automatically");
             } else {
