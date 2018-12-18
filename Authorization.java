@@ -46,30 +46,25 @@ public class Authorization {
       int result;
       switch(e.getActionCommand()) {
         case "Sign In":
-          UIClient.send(("login: " + login.getText() + ",password: " + password.getText() + ",method: findUser").getBytes());
+          UIClient.send(("login:" + login.getText() + ",password:" + password.getText() + ",method:findUser").getBytes());
           //id = UI.bd.findUser(login.getText(), password.getText());
           result = Integer.parseInt(new String(UIClient.get()).trim());
           System.out.print(result);
           if(result > 0) {
-            JOptionPane.showMessageDialog(null, "True");
+            window.setVisible(false);
+            new MainWindow(login.getText(), password.getText());
           } else {
             JOptionPane.showMessageDialog(null, "Invalid data entered!");
           }
           break;
         case "Sign Up":
-          UIClient.send(("login: " + login.getText() + ",password: " + password.getText() + ",method: findLogin").getBytes());
+          UIClient.send(("login:" + login.getText() + ",password:" + password.getText() + ",method:createUser").getBytes());
           result = Integer.parseInt(new String(UIClient.get()).trim());
-          System.out.print(result);
           if (result > 0) {
-            JOptionPane.showMessageDialog(null, "This login already exists!");
+            JOptionPane.showMessageDialog(null, "User registered successfully! Sign in. Login will be done automatically");
+            new MainWindow(login.getText(), password.getText());
           } else {
-            UIClient.send(("login: " + login.getText() + ",password: " + password.getText() + ",method: createUser").getBytes());
-            result = Integer.parseInt(new String(UIClient.get()).trim());
-            if (result > 0) {
-              JOptionPane.showMessageDialog(null, "User registered successfully! Sign in. Login will be done automatically");
-            } else {
-              JOptionPane.showMessageDialog(null, "Error! Can not create User. Not valid Data!");
-            }
+            JOptionPane.showMessageDialog(null, "This login already exists or not valid Data!");          
           }
           break;
       }

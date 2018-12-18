@@ -9,6 +9,7 @@ public class ShopServer {
   public final static int DEFAULT_PORT = 8001;//определение порта
   public static DatagramSocket s;
   private static User user = new User();
+  private static Computer computer = new Computer();
   private static DatagramPacket request;
   private static Statement connection;
   public static void runServer() throws IOException {//метод сервера runServer
@@ -22,7 +23,7 @@ public class ShopServer {
         s.receive(request);//помещение полученного содержимого в
         try {
           for( String param : new String(request.getData()).trim().split(",")) {
-            String[] kv = param.split(": ");
+            String[] kv = param.split(":");
             System.out.println(kv[0]+ " " + kv[1]);
             initParams(kv[0], kv[1]);
           }
@@ -53,16 +54,35 @@ public class ShopServer {
   }
 
   public static void initParams(String method, String value) {
-    switch(method.trim()) {
-      case "login": 
-        user.login = value;
-        break;
-      case "password":
-        user.password = value;
-        break;
-      case "method":
-        initMethod(value);
-        break;
+     try { 
+      switch(method.trim()) {
+        case "login": 
+          user.login = value;
+          break;
+        case "password":
+          user.password = value;
+          break;
+        case "model":
+          computer.model = value;
+          break;
+        case "videocard":
+          computer.videocard = value;
+          break;
+        case "ram":
+          computer.ram = Integer.parseInt(value);
+          break;
+        case "memory":
+          computer.memory = Integer.parseInt(value);
+          break;
+        case "processor":
+          computer.processor = value;
+          break;
+        case "method":
+          initMethod(value);
+          break;
+      }
+    } catch(Exception e) {
+      send("0".getBytes());
     }
   }
 
@@ -71,15 +91,19 @@ public class ShopServer {
     switch(method.trim()) {
       case "findUser":
         System.out.println("==== SERVER START FIND USER ====");
-        findUser();
+        send(String.valueOf(findUser()).getBytes());
         break;
       case "createUser":
         System.out.println("==== SERVER START CREATE USER ====");
-        createUser();
+        send(String.valueOf(createUser()).getBytes());
         break;
-      case "findLogin":
-        System.out.println("==== SERVER START FIND LOGIN ====");
-        findLogin();
+      case "checkAdmin":
+        System.out.println("==== SERVER START CHECK ADMIN ====");
+        send(String.valueOf(checkAdmin()).getBytes());
+        break;
+      case "createComputer":
+        System.out.println("==== SERVER START CREATE COMPUTER ====");
+        send(String.valueOf(createComputer()).getBytes());
         break;
       default:
         send("0".getBytes());
@@ -88,18 +112,70 @@ public class ShopServer {
     //System.out.println("==== NOTHING HAPPANED ====");
   }
 
-  public static void createUser() {
+  public static String createComputer() {
     try {
-      connection.executeUpdate("INSERT INTO user(login, password) "
-        + "VALUES ('" + user.login + "', '" + user.password + "');");
-      send("1".getBytes());
+      connection.executeUpdate("INSERT INTO computer(model, videocard, ram, memory, processor) "
+        + "VALUES ('" + String.join("', '", computer.returnParams()) + "');");
+      System.out.println("==== CREATE COMPUTER TRUE ====");
+      return "1";
     } catch(Exception e) {
-      System.out.println("==== SERVER CREATE USER EXCEPTION ====");
-      send("0".getBytes());
+      System.out.println("==== SERVER CREATE COMPUTER EXCEPTION ====");
+      return "0";
     }
   }
 
-  public static void findUser() {
+  // public static String findComputer() {
+  //   try {
+  //     ResultSet myResultSet = connection.executeQuery(
+  //       "SELECT u.id FROM user u WHERE u.login='" + user.login + "' and u.password='" + user.password + "';"
+  //     );
+  //     System.out.println("SELECT u.id FROM user u WHERE u.login='" + user.login + "' and u.password='" + user.password + "';");
+  //     myResultSet.next();
+  //     System.out.print(myResultSet.getString("id"));
+  //     System.out.println("==== FIND USER TRUE ====");
+  //     return myResultSet.getString("id");
+  //     //send(String.valueOf(myResultSet.getString("id")).getBytes());
+  //   } catch(Exception e) {
+  //     System.out.println("==== SERVER FIND USER EXCEPTION ====");
+  //     e.printStackTrace();
+  //     return "0";
+  //     //send("0".getBytes());
+  //   }
+  // }
+
+  public static String checkAdmin() {
+    try {
+      ResultSet myResultSet = connection.executeQuery(
+        "SELECT u.admin FROM user u WHERE u.login='" + user.login + "' and u.password='" + user.password + "';"
+      );
+      myResultSet.next();
+      System.out.print(myResultSet.getString("admin"));
+      System.out.println("==== CHECK ADMIN TRUE ====");
+      return myResultSet.getString("admin");
+    } catch(Exception e) {
+      System.out.println("==== SERVER CHECK ADMIN EXCEPTION ====");
+      return "0";
+    }
+  }
+
+  public static String createUser() {
+    if (Integer.valueOf(findLogin()) > 0) {
+      System.out.println("==== SERVER CREATE USER EXCEPTION ====");
+      return "0";
+    } else {
+      try {
+        connection.executeUpdate("INSERT INTO user(login, password) "
+          + "VALUES ('" + user.login + "', '" + user.password + "');");
+        System.out.println("==== CREATE USER TRUE ====");
+        return String.valueOf(findUser());
+      } catch(Exception e) {
+        System.out.println("==== SERVER CREATE USER EXCEPTION ====");
+        return "0";
+      }
+    }
+  }
+
+  public static String findUser() {
     try {
       ResultSet myResultSet = connection.executeQuery(
         "SELECT u.id FROM user u WHERE u.login='" + user.login + "' and u.password='" + user.password + "';"
@@ -108,26 +184,30 @@ public class ShopServer {
       myResultSet.next();
       System.out.print(myResultSet.getString("id"));
       System.out.println("==== FIND USER TRUE ====");
-      send(String.valueOf(myResultSet.getString("id")).getBytes());
+      return myResultSet.getString("id");
+      //send(String.valueOf(myResultSet.getString("id")).getBytes());
     } catch(Exception e) {
       System.out.println("==== SERVER FIND USER EXCEPTION ====");
       e.printStackTrace();
-      send("0".getBytes());
+      return "0";
+      //send("0".getBytes());
     }
   }
 
-  public static void findLogin() {
+  public static String findLogin() {
     try {
       ResultSet myResultSet = connection.executeQuery(
         "SELECT u.id FROM user u WHERE u.login='" + user.login + "';"
       );
       myResultSet.next();
       System.out.println("==== SERVER FIND LOGIN TRUE ====");
-      send(String.valueOf(myResultSet.getString("id")).getBytes());
+      return myResultSet.getString("id");
+      //send(String.valueOf(myResultSet.getString("id")).getBytes());
     } catch(Exception e) {
       System.out.println("==== SERVER FIND LOGIN EXCEPTION ====");
       e.printStackTrace();
-      send("0".getBytes());
+      //send("0".getBytes());
+      return "0";
     }
   }
 

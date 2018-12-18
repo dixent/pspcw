@@ -1,9 +1,3 @@
-
-/*
-CLASSPATH=$CLASSPATH:/usr/share/java/mysql.jar
-export CLASSPATH
-*/
-
 import java.net.*;
 import java.io.*;
 public class UIClient {//описание класса клиента
