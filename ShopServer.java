@@ -15,10 +15,10 @@ public class ShopServer {
   public static void runServer() throws IOException {//метод сервера runServer
     try {
       boolean stopFlag = false;//создание флага stopFlag и его инициализация значением false
-      byte[] data = new byte[512];//буфер для приема/передачи дейтаграммы реальному объекту с портом DEFAULT_PORT
+      byte[] data;//буфер для приема/передачи дейтаграммы реальному объекту с портом DEFAULT_PORT
       System.out.println("UDPServer: Started on " + s.getLocalAddress() + ":" + s.getLocalPort()); //вывод к консоль сообщения
       while(!stopFlag) {//цикл до тех пор, пока флаг не примет значение true
-        data = new byte[512];
+        data = new byte[10240];
         request = new DatagramPacket(data, data.length);//создание объекта дейтаграммы для получения данных
         s.receive(request);//помещение полученного содержимого в
         try {
@@ -105,6 +105,10 @@ public class ShopServer {
         System.out.println("==== SERVER START CREATE COMPUTER ====");
         send(String.valueOf(createComputer()).getBytes());
         break;
+      case "indexComputers":
+        System.out.println("==== SERVER START INDEX COMPUTERS ====");
+        send(String.valueOf(indexComputers()).getBytes());
+        break;
       default:
         send("0".getBytes());
         break;
@@ -112,9 +116,56 @@ public class ShopServer {
     //System.out.println("==== NOTHING HAPPANED ====");
   }
 
+  public static String indexComputers() {
+    try {
+      String[] data;
+      if(checkAdmin().equals("0")) {
+        ResultSet myResultSet = connection.executeQuery(
+          "SELECT COUNT(*) AS count_objects FROM computers WHERE active=true;"
+        );
+        myResultSet.next();
+        data = new String[myResultSet.getInt("count_objects")];
+        myResultSet = connection.executeQuery("SELECT * FROM computers WHERE active=true;");
+        int i = 0;
+        while(myResultSet.next()) {
+          String[] row = { myResultSet.getString("id"), myResultSet.getString("model"), 
+            myResultSet.getString("videocard"), myResultSet.getString("ram"), 
+            myResultSet.getString("memory"), myResultSet.getString("processor") };
+          data[i] = String.join("&", row);
+          System.out.println(data[i]);
+          i++;
+          
+        }
+      } else {
+        ResultSet myResultSet = connection.executeQuery(
+          "SELECT COUNT(*) AS count_objects FROM computers;"
+        );
+        myResultSet.next();
+        data = new String[myResultSet.getInt("count_objects")];
+        myResultSet = connection.executeQuery("SELECT * FROM computers;");
+        int i = 0;
+        while(myResultSet.next()) {
+          String[] row = { myResultSet.getString("id"), myResultSet.getString("model"), 
+            myResultSet.getString("videocard"), myResultSet.getString("ram"), 
+            myResultSet.getString("memory"), myResultSet.getString("processor"), myResultSet.getString("active") };
+          data[i] = String.join("&", row);
+          System.out.println(data[i]);
+          i++;
+
+        }
+      }
+      return String.join("#", data);
+    } catch(Exception e) {
+      System.out.println("==== INDEX COMPUTERS EXCEPTION ====");
+      e.printStackTrace();
+      return "0";
+    }
+  }
+
+
   public static String createComputer() {
     try {
-      connection.executeUpdate("INSERT INTO computer(model, videocard, ram, memory, processor) "
+      connection.executeUpdate("INSERT INTO computers(model, videocard, ram, memory, processor) "
         + "VALUES ('" + String.join("', '", computer.returnParams()) + "');");
       System.out.println("==== CREATE COMPUTER TRUE ====");
       return "1";
@@ -127,9 +178,9 @@ public class ShopServer {
   // public static String findComputer() {
   //   try {
   //     ResultSet myResultSet = connection.executeQuery(
-  //       "SELECT u.id FROM user u WHERE u.login='" + user.login + "' and u.password='" + user.password + "';"
+  //       "SELECT u.id FROM users u WHERE u.login='" + user.login + "' and u.password='" + user.password + "';"
   //     );
-  //     System.out.println("SELECT u.id FROM user u WHERE u.login='" + user.login + "' and u.password='" + user.password + "';");
+  //     System.out.println("SELECT u.id FROM users u WHERE u.login='" + user.login + "' and u.password='" + user.password + "';");
   //     myResultSet.next();
   //     System.out.print(myResultSet.getString("id"));
   //     System.out.println("==== FIND USER TRUE ====");
@@ -146,7 +197,7 @@ public class ShopServer {
   public static String checkAdmin() {
     try {
       ResultSet myResultSet = connection.executeQuery(
-        "SELECT u.admin FROM user u WHERE u.login='" + user.login + "' and u.password='" + user.password + "';"
+        "SELECT u.admin FROM users u WHERE u.login='" + user.login + "' and u.password='" + user.password + "';"
       );
       myResultSet.next();
       System.out.print(myResultSet.getString("admin"));
@@ -164,7 +215,7 @@ public class ShopServer {
       return "0";
     } else {
       try {
-        connection.executeUpdate("INSERT INTO user(login, password) "
+        connection.executeUpdate("INSERT INTO users(login, password) "
           + "VALUES ('" + user.login + "', '" + user.password + "');");
         System.out.println("==== CREATE USER TRUE ====");
         return String.valueOf(findUser());
@@ -178,9 +229,9 @@ public class ShopServer {
   public static String findUser() {
     try {
       ResultSet myResultSet = connection.executeQuery(
-        "SELECT u.id FROM user u WHERE u.login='" + user.login + "' and u.password='" + user.password + "';"
+        "SELECT u.id FROM users u WHERE u.login='" + user.login + "' and u.password='" + user.password + "';"
       );
-      System.out.println("SELECT u.id FROM user u WHERE u.login='" + user.login + "' and u.password='" + user.password + "';");
+      System.out.println("SELECT u.id FROM users u WHERE u.login='" + user.login + "' and u.password='" + user.password + "';");
       myResultSet.next();
       System.out.print(myResultSet.getString("id"));
       System.out.println("==== FIND USER TRUE ====");
@@ -197,7 +248,7 @@ public class ShopServer {
   public static String findLogin() {
     try {
       ResultSet myResultSet = connection.executeQuery(
-        "SELECT u.id FROM user u WHERE u.login='" + user.login + "';"
+        "SELECT u.id FROM users u WHERE u.login='" + user.login + "';"
       );
       myResultSet.next();
       System.out.println("==== SERVER FIND LOGIN TRUE ====");

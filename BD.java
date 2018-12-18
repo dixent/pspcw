@@ -27,7 +27,7 @@ public class BD {
   public int findUser(String login, String password) {
     try {
       ResultSet myResultSet = connection.executeQuery(
-        "SELECT u.id FROM user u WHERE u.login='" + login + "' and u.password='" + password + "';"
+        "SELECT u.id FROM users u WHERE u.login='" + login + "' and u.password='" + password + "';"
       );
       myResultSet.next();
       return myResultSet.getInt("id");
@@ -39,7 +39,7 @@ public class BD {
   public int findLogin(String login) {
     try {
       ResultSet myResultSet = connection.executeQuery(
-        "SELECT u.id FROM user u WHERE u.login='" + login + "';"
+        "SELECT u.id FROM users u WHERE u.login='" + login + "';"
       );
       myResultSet.next();
       //System.out.print(myResultSet);

@@ -4,7 +4,7 @@ public class UIClient {//описание класса клиента
   public static InetAddress address;
   public final static int PORT = 8001;
   public static DatagramSocket s;
-  public static byte[] data = new byte[512];
+  public static byte[] data = new byte[10240];
   // public static void runClient() throws IOException {//метод клиента runClient
   //   try {
   //     byte[] buf = new byte[512]; //буфер для приема/передачи дейтаграммы
@@ -53,7 +53,7 @@ public class UIClient {//описание класса клиента
     try {
       address = InetAddress.getByName("127.0.0.1");
       s = new DatagramSocket();
-      Authorization authorication = new Authorization();
+      new Authorization();
       //runClient();//вызов метода объекта client
     } catch(IOException ex) {
       ex.printStackTrace();

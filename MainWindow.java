@@ -1,4 +1,5 @@
 import javax.swing.*;
+import javax.swing.table.*;
 import java.awt.*;
 import java.util.*;
 import java.awt.event.*;
@@ -9,9 +10,11 @@ class MainWindow {
   JFrame window, newComputer;
   JButton addComputer, editComputer, deleteComputer, saveComputer, createComputer, updateComputer;
   JTable table;
-  //TableModel tableModel;
+  TableModel tableModel;
 
-  String[] columnsName = { "Id", "Author", "Year", "Name", "Genre" };
+  String[] userColumns = { "Id", "Model", "Video Card", "RAM", "Memory", "Processor" };
+  String[] adminColumns = { "Id", "Model", "Video Card", "RAM", "Memory", "Processor", "Active" };
+  String[][] rows;
   JTextField model, videocard, ram, memory, processor, active,
     edit_author, edit_year, edit_name, edit_genre;
   JScrollPane scrollPane;
@@ -24,7 +27,7 @@ class MainWindow {
     initWindow();
     initNewComputer();
     //initeditComputer();
-    //initTable();
+    
   }
 
   private Boolean userIsAdmin() {
@@ -53,20 +56,55 @@ class MainWindow {
     window.add(BorderLayout.PAGE_START, adminMenu);
   }
 
-  private void initTable() {
-    
+  private void initRows() {
+    UIClient.send((userData + ",method:indexComputers").getBytes());
+    String result = new String(UIClient.get()).trim();
+    System.out.println(result);
+    if (!result.equals("0")) {
+      String[] strings = result.split("#");
+      rows = new String[strings.length][strings[0].split("&").length];
+      System.out.println(strings[0] + " " + rows.length + " " + rows[0].length);
+      for(int i = 0; i < strings.length; i++) {
+        String[] string = strings[i].split("&");
+        for(int j = 0; j < rows[i].length; j++) {
+          rows[i][j] = string[j]; 
+        } 
+      }
+      //rows[0] = strings[0].split("|");
+    } else {
+      JOptionPane.showMessageDialog(null, "Something wrong with DB!");
+    }
+  }
+
+  private void initTableModel() {
+    initRows();
+    String[] columns;
+    if (userIsAdmin()) {
+      columns = adminColumns;
+    } else {
+      columns = userColumns;
+    }
+    tableModel = new DefaultTableModel(rows, columns);
     //tableModel
   }
 
+  
+
+  private void index() {
+
+  }
   
   private void initWindow() {
     window = new JFrame("Shop");
     window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     window.setSize(1000, 800);
     window.setLayout(new BorderLayout());
-    if (userIsAdmin() == true) {
+    if (userIsAdmin()) {
       initAdminMenu();
     }
+    initTableModel();
+    table = new JTable(tableModel);
+    window.add(BorderLayout.CENTER, table);
 
     // newComputer = new JButton("New");
     // newComputer.addActionListener(new ButtonListener());
