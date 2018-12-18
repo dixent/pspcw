@@ -7,16 +7,16 @@ import java.awt.event.*;
 class MainWindow {
 
   Object[][] data;
-  JFrame window, newComputer;
+  JFrame window, newComputer, editComputerWindow;
   JButton addComputer, editComputer, deleteComputer, saveComputer, createComputer, updateComputer;
   JTable table;
-  TableModel tableModel;
+  DefaultTableModel tableModel;
 
   String[] userColumns = { "Id", "Model", "Video Card", "RAM", "Memory", "Processor" };
   String[] adminColumns = { "Id", "Model", "Video Card", "RAM", "Memory", "Processor", "Active" };
   String[][] rows;
   JTextField model, videocard, ram, memory, processor, active,
-    edit_author, edit_year, edit_name, edit_genre;
+    edit_model, edit_videocard, edit_ram, edit_memory, edit_processor, edit_active;
   JScrollPane scrollPane;
   JMenuBar adminMenu;
 
@@ -26,7 +26,7 @@ class MainWindow {
     userData = "login:" + login + ",password:" + password;
     initWindow();
     initNewComputer();
-    //initeditComputer();
+    initEditComputerWindow();
     
   }
 
@@ -142,7 +142,7 @@ class MainWindow {
     model = new JTextField();
     newComputer.add(model);
 
-    newComputer.add(new JLabel("Videocard - "));
+    newComputer.add(new JLabel("Video card - "));
     videocard = new JTextField();
     newComputer.add(videocard);
 
@@ -171,31 +171,39 @@ class MainWindow {
     processor.setText("");
   }
 
-  // private void initeditComputer() {
-  //   editComputer = new JFrame("Edit");
-  //   editComputer.setSize(500, 400);
-  //   editComputer.setLayout(new GridLayout(6, 2));
+  private void initEditComputerWindow() {
+    editComputerWindow = new JFrame("Edit");
+    editComputerWindow.setSize(500, 400);
+    editComputerWindow.setLayout(new GridLayout(7, 2));
 
-  //   editComputer.add(new JLabel("Author - "));
-  //   edit_author = new JTextField();
-  //   editComputer.add(edit_author);
+    editComputerWindow.add(new JLabel("Model - "));
+    edit_model = new JTextField();
+    editComputerWindow.add(edit_model);
 
-  //   editComputer.add(new JLabel("Year - "));
-  //   edit_year = new JTextField();
-  //   editComputer.add(edit_year);
+    editComputerWindow.add(new JLabel("Video card - "));
+    edit_videocard = new JTextField();
+    editComputerWindow.add(edit_videocard);
 
-  //   editComputer.add(new JLabel("Name - "));
-  //   edit_name = new JTextField();
-  //   editComputer.add(edit_name);
+    editComputerWindow.add(new JLabel("RAM - "));
+    edit_ram = new JTextField();
+    editComputerWindow.add(edit_ram);
 
-  //   editComputer.add(new JLabel("Genre - "));
-  //   edit_genre = new JTextField();
-  //   editComputer.add(edit_genre);
+    editComputerWindow.add(new JLabel("Memory - "));
+    edit_memory = new JTextField();
+    editComputerWindow.add(edit_memory);
 
-  //   updateComputer = new JButton("Update");
-  //   updateComputer.addActionListener(new ButtonListener());
-  //   editComputer.add(updateComputer);
-  // }
+    editComputerWindow.add(new JLabel("Processor - "));
+    edit_processor = new JTextField();
+    editComputerWindow.add(edit_processor);
+
+    editComputerWindow.add(new JLabel("Active - "));
+    edit_active = new JTextField();
+    editComputerWindow.add(edit_active);
+
+    updateComputer = new JButton("Update");
+    updateComputer.addActionListener(new ButtonListener());
+    editComputerWindow.add(updateComputer);
+  }
 
   private class ButtonListener implements ActionListener {
     public void actionPerformed(ActionEvent e) {
@@ -203,21 +211,21 @@ class MainWindow {
         case "New": 
           newComputer.setVisible(true);
           break;
-        // case "Edit":
-        //   editAction();
-        //   if (selected_element != null) {
-        //     editComputer.setVisible(true);
-        //   }
-        //   break;
+        case "Edit":
+          editAction();
+          if (selected_element != null) {
+            editComputerWindow.setVisible(true);
+          }
+          break;
         case "Create":
           createAction();
           break;
-        // case "Update":
-        //   updateAction();
-        //   break;
-        // case "Delete":
-        //   deleteAction();
-        //   break;
+        case "Update":
+          updateAction();
+          break;
+        case "Delete":
+          deleteAction();
+          break;
       }
     }
   }
@@ -230,7 +238,7 @@ class MainWindow {
         JOptionPane.showMessageDialog(null, "Computer created successfully!");
         newComputer.setVisible(false);
         resetInputFields();
-        //reindex();
+        reindex();
       } else { 
         JOptionPane.showMessageDialog(null, "Error! Input not valid data!");
       }
@@ -240,51 +248,55 @@ class MainWindow {
     
   }
 
-  // private void updateAction() {
-  //   Object[] data = new Object[5];
-  //   try {
-  //     data[1] = edit_author.getText();
-  //     data[2] = edit_name.getText();
-  //     int int_year = Integer.parseInt(edit_year.getText());
-  //     if ((int_year < 0) || (int_year > Calendar.getInstance().get(Calendar.YEAR))) {
-  //       throw new NullPointerException();
-  //     } else {
-  //       data[3] = int_year;
-  //     }
-  //     data[4] = edit_genre.getText();
-  //     data[0] = selected_element[0];
-  //     Library.updateElementInDB(data);
-  //   } catch(Exception e) {
-  //     JOptionPane.showMessageDialog(null, "Error! Input not valid data!");
-  //   }
-  //   editComputer.setVisible(false);
-  //   selected_element = null;
-  //   reindex();
-  // }
+  private void updateAction() {
+    try {  
+      String newComputerParams = ",id:" + rows[table.getSelectedRow()][0].toString() +  
+        ",model:" + edit_model.getText() + ",videocard:" + edit_videocard.getText() + ",ram:" + 
+        edit_ram.getText() + ",memory:" + edit_memory.getText() + ",processor:" +
+        edit_processor.getText() + ",active:" + edit_active.getText();
+        UIClient.send((userData + newComputerParams + ",method:updateComputer").getBytes());
+      if(new String(UIClient.get()).trim().equals("1")) {
+        JOptionPane.showMessageDialog(null, "Deleted successful!");
+        editComputerWindow.setVisible(false);
+        selected_element = null;
+        reindex();
+      } else {
+        JOptionPane.showMessageDialog(null, "Error! Input not valid data!");
+      }
+    } catch(Exception e) {
+      JOptionPane.showMessageDialog(null, "Error! Input not valid data!");
+    }
+  }
 
-  // private void deleteAction() {
-  //   Library.deleteElementFromDB(data[table.getSelectedRow()][0].toString());
-  //   reindex();
-  // }
+  private void deleteAction() {
+    UIClient.send((userData + ",id:" + rows[table.getSelectedRow()][0].toString() + ",method:deleteComputer").getBytes());
+    if(new String(UIClient.get()).trim().equals("1")) {
+      JOptionPane.showMessageDialog(null, "Deleted successful!");
+    } else {
+      JOptionPane.showMessageDialog(null, "Error delete!");
+    }
+    reindex();
+  }
 
-  // Object[] selected_element;
-  // private void editAction() {
-  //   selected_element = data[table.getSelectedRow()];
-  //   edit_author.setText(selected_element[1].toString());
-  //   edit_year.setText(selected_element[2].toString());
-  //   edit_name.setText(selected_element[3].toString());
-  //   edit_genre.setText(selected_element[4].toString());
-  // }
+  Object[] selected_element;
+  private void editAction() {
+    selected_element = rows[table.getSelectedRow()];
+    edit_model.setText(selected_element[1].toString());
+    edit_videocard.setText(selected_element[2].toString());
+    edit_ram.setText(selected_element[3].toString());
+    edit_memory.setText(selected_element[4].toString());
+    edit_processor.setText(selected_element[5].toString());
+    edit_active.setText(selected_element[6].toString());
+  }
 
-  // private void reindex() {
-  //   Library.index();
-  //   this.data = Library.data;
+  private void reindex() {
+    initTableModel();
     
-  //   window.remove(scrollPane);
-  //   table = new JTable(data, columnsName);
-  //   scrollPane = new JScrollPane(table);
-  //   table.setFillsViewportHeight(true);
-  //   window.add(BorderLayout.CENTER, scrollPane);
-  //   SwingUtilities.updateComponentTreeUI(window);
-  // }
+    window.remove(table);
+    table = new JTable(tableModel);
+    //scrollPane = new JScrollPane(table);
+    //table.setFillsViewportHeight(true);
+    window.add(BorderLayout.CENTER, table);
+    SwingUtilities.updateComponentTreeUI(window);
+  }
 }

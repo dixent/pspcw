@@ -22,6 +22,7 @@ public class ShopServer {
         request = new DatagramPacket(data, data.length);//создание объекта дейтаграммы для получения данных
         s.receive(request);//помещение полученного содержимого в
         try {
+          System.out.println(new String(request.getData()).trim());
           for( String param : new String(request.getData()).trim().split(",")) {
             String[] kv = param.split(":");
             System.out.println(kv[0]+ " " + kv[1]);
@@ -62,6 +63,9 @@ public class ShopServer {
         case "password":
           user.password = value;
           break;
+        case "id":
+          computer.id = value;
+          break;
         case "model":
           computer.model = value;
           break;
@@ -76,6 +80,9 @@ public class ShopServer {
           break;
         case "processor":
           computer.processor = value;
+          break;
+        case "active":
+          computer.active = value;
           break;
         case "method":
           initMethod(value);
@@ -109,11 +116,43 @@ public class ShopServer {
         System.out.println("==== SERVER START INDEX COMPUTERS ====");
         send(String.valueOf(indexComputers()).getBytes());
         break;
+      case "deleteComputer":
+        System.out.println("==== SERVER START DELETE COMPUTER ====");
+        send(String.valueOf(deleteComputer()).getBytes());
+        break;
+      case "updateComputer":
+        System.out.println("==== SERVER START UPDATE COMPUTER ====");
+        send(String.valueOf(updateComputer()).getBytes());
+        break;
       default:
         send("0".getBytes());
         break;
     }
     //System.out.println("==== NOTHING HAPPANED ====");
+  }
+  public static String updateComputer(){
+    try {
+      connection.executeUpdate("UPDATE computers SET model='" + computer.model + "', videocard='" + 
+        computer.videocard + "', ram=" + String.valueOf(computer.ram) + ", memory=" + 
+        String.valueOf(computer.memory) + ", processor='" + computer.processor + "', active=" + computer.active + " where id=" + String.valueOf(computer.id) + ";");
+      System.out.println("==== UPDATE COMPUTER TRUE ====");
+      return "1";
+    } catch(Exception e) {
+      System.out.println("==== SERVER UPDATE COMPUTER EXCEPTION ====");
+      e.printStackTrace();
+      return "0";
+    }
+  }
+
+  public static String deleteComputer() {
+    try {
+      connection.executeUpdate("DELETE FROM computers WHERE id=" + computer.id + ";"); 
+      System.out.println("==== TRUE DELETE COMPUTER ====");
+      return "1";
+    } catch(Exception e) {
+      System.out.println("==== DELETE COMPUTER EXCEPTION ====");
+      return "0";
+    }
   }
 
   public static String indexComputers() {
