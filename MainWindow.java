@@ -7,16 +7,17 @@ import java.awt.event.*;
 class MainWindow {
 
   Object[][] data;
-  JFrame window, newComputer, editComputerWindow;
-  JButton addComputer, editComputer, deleteComputer, saveComputer, createComputer, updateComputer, buyComputer, exitButton, myOrders, shop;
+  JFrame window, newComputer, editComputerWindow, filterWindow;
+  JButton addComputer, editComputer, deleteComputer, saveComputer, createComputer, updateComputer, buyComputer, exitButton, myOrders, shop, usersButton, searchButton, filterButton, saveFilter;
   JTable table;
   DefaultTableModel tableModel;
 
-  String[] userColumns = { "Id", "Model", "Video Card", "RAM", "Memory", "Processor" };
-  String[] adminColumns = { "Id", "Model", "Video Card", "RAM", "Memory", "Processor", "Active", "User ID" };
+  String[] userColumns = { "Id", "Model", "Video Card", "RAM", "Memory", "Processor", "Price" };
+  String[] adminColumns = { "Id", "Model", "Video Card", "RAM", "Memory", "Processor", "Active", "User ID", "Price" };
   String[][] rows;
-  JTextField model, videocard, ram, memory, processor, active,
-    edit_model, edit_videocard, edit_ram, edit_memory, edit_processor, edit_active;
+  JTextField model, videocard, ram, memory, processor, active, price,
+    edit_model, edit_videocard, edit_ram, edit_memory, edit_processor, edit_active, edit_price, searchField, 
+    filter_model, filter_videocard, filter_ram, filter_memory, filter_processor, filter_active, filter_price;
   JScrollPane scrollPane;
   JMenuBar adminMenu, userMenu;
 
@@ -27,7 +28,41 @@ class MainWindow {
     initWindow();
     initNewComputer();
     initEditComputerWindow();
-    
+    initFilterWindow();
+  }
+
+  private void initFilterWindow() {
+    filterWindow = new JFrame("Filter");
+    filterWindow.setSize(500, 400);
+    filterWindow.setLayout(new GridLayout(8, 2));
+
+    filterWindow.add(new JLabel("Model - "));
+    filter_model = new JTextField();
+    filterWindow.add(filter_model);
+
+    filterWindow.add(new JLabel("Video card - "));
+    filter_videocard = new JTextField();
+    filterWindow.add(filter_videocard);
+
+    filterWindow.add(new JLabel("RAM - "));
+    filter_ram = new JTextField();
+    filterWindow.add(filter_ram);
+
+    filterWindow.add(new JLabel("Memory - "));
+    filter_memory = new JTextField();
+    filterWindow.add(filter_memory);
+
+    filterWindow.add(new JLabel("Processor - "));
+    filter_processor = new JTextField();
+    filterWindow.add(filter_processor);
+
+    filterWindow.add(new JLabel("Price($) - "));
+    filter_price = new JTextField();
+    filterWindow.add(filter_price);
+
+    saveFilter = new JButton("Save filter");
+    saveFilter.addActionListener(new ButtonListener());
+    filterWindow.add(saveFilter);
   }
 
   private Boolean userIsAdmin() {
@@ -49,13 +84,30 @@ class MainWindow {
     deleteComputer = new JButton("Delete");
     deleteComputer.addActionListener(new ButtonListener());
 
+    usersButton = new JButton("Users");
+    usersButton.addActionListener(new ButtonListener());
+
+    searchButton = new JButton("Search");
+    searchButton.addActionListener(new ButtonListener());
+    searchField = new JTextField();
+
+    filterButton = new JButton("Filter");
+    filterButton.addActionListener(new ButtonListener());
+
     exitButton = new JButton("Sign out");
     exitButton.addActionListener(new ButtonListener());
+
+
 
     adminMenu = new JMenuBar();
     adminMenu.add(addComputer);
     adminMenu.add(editComputer);
     adminMenu.add(deleteComputer);
+    adminMenu.add(usersButton);
+    adminMenu.add(new JLabel("Search by model: "));
+    adminMenu.add(searchField);
+    adminMenu.add(searchButton);
+    adminMenu.add(filterButton);
     adminMenu.add(exitButton);
     window.add(BorderLayout.PAGE_START, adminMenu);
   }
@@ -70,6 +122,10 @@ class MainWindow {
     myOrders = new JButton("My orders");
     myOrders.addActionListener(new ButtonListener());
 
+    searchButton = new JButton("Search");
+    searchButton.addActionListener(new ButtonListener());
+    searchField = new JTextField();
+
     exitButton = new JButton("Sign out");
     exitButton.addActionListener(new ButtonListener());
 
@@ -77,6 +133,9 @@ class MainWindow {
     userMenu.add(shop);
     userMenu.add(buyComputer);
     userMenu.add(myOrders);
+    userMenu.add(new JLabel("Search by model: "));
+    userMenu.add(searchField);
+    userMenu.add(searchButton);
     userMenu.add(exitButton);
     window.add(BorderLayout.PAGE_START, userMenu);
   }
@@ -86,11 +145,11 @@ class MainWindow {
     String[] columns = userColumns;
     tableModel = new DefaultTableModel(rows, columns);
     
-    window.remove(table);
+    window.remove(scrollPane);
     table = new JTable(tableModel);
-    //scrollPane = new JScrollPane(table);
-    //table.setFillsViewportHeight(true);
-    window.add(BorderLayout.CENTER, table);
+    scrollPane = new JScrollPane(table);
+    table.setFillsViewportHeight(true);
+    window.add(BorderLayout.CENTER, scrollPane);
     SwingUtilities.updateComponentTreeUI(window);
   }
 
@@ -127,7 +186,6 @@ class MainWindow {
           rows[i][j] = string[j]; 
         } 
       }
-      //rows[0] = strings[0].split("|");
     } else {
       JOptionPane.showMessageDialog(null, "Something wrong with DB!");
     }
@@ -165,12 +223,6 @@ class MainWindow {
     //tableModel
   }
 
-  
-
-  private void index() {
-
-  }
-  
   private void initWindow() {
     window = new JFrame("Shop");
     window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -185,6 +237,7 @@ class MainWindow {
     table = new JTable(tableModel);
     scrollPane = new JScrollPane(table);
     table.setFillsViewportHeight(true);
+    table.setAutoCreateRowSorter(true);
     window.add(BorderLayout.CENTER, scrollPane);
 
     // newComputer = new JButton("New");
@@ -217,7 +270,7 @@ class MainWindow {
   private void initNewComputer() {
     newComputer = new JFrame("New");
     newComputer.setSize(500, 400);
-    newComputer.setLayout(new GridLayout(7, 2));
+    newComputer.setLayout(new GridLayout(8, 2));
 
     newComputer.add(new JLabel("Model - "));
     model = new JTextField();
@@ -239,6 +292,10 @@ class MainWindow {
     processor = new JTextField();
     newComputer.add(processor);
 
+    newComputer.add(new JLabel("Price($) - "));
+    price = new JTextField();
+    newComputer.add(price);
+
     createComputer = new JButton("Create");
     createComputer.addActionListener(new ButtonListener());
     newComputer.add(createComputer);
@@ -250,12 +307,13 @@ class MainWindow {
     ram.setText("");
     memory.setText("");
     processor.setText("");
+    price.setText("");
   }
 
   private void initEditComputerWindow() {
     editComputerWindow = new JFrame("Edit");
     editComputerWindow.setSize(500, 400);
-    editComputerWindow.setLayout(new GridLayout(7, 2));
+    editComputerWindow.setLayout(new GridLayout(8, 2));
 
     editComputerWindow.add(new JLabel("Model - "));
     edit_model = new JTextField();
@@ -280,6 +338,10 @@ class MainWindow {
     editComputerWindow.add(new JLabel("Active - "));
     edit_active = new JTextField();
     editComputerWindow.add(edit_active);
+
+    editComputerWindow.add(new JLabel("Price($) - "));
+    edit_price = new JTextField();
+    editComputerWindow.add(edit_price);
 
     updateComputer = new JButton("Update");
     updateComputer.addActionListener(new ButtonListener());
@@ -316,16 +378,59 @@ class MainWindow {
         case "Shop":
           reindex();
           break;
+        case "Users":
+          new UsersWindow(userData);
+          break;
+        case "Search":
+          searchAction();
+          break;
         case "Sign out":
           exitAction();
+          break;
+        case "Filter":
+          filterWindow.setVisible(true);
+          break;
+        case "Save filter":
+          filterWindow.setVisible(false);
           break;
       }
     }
   }
 
+  private void searchAction() {
+    initRows();
+    String[][] new_rows = new String[rows.length][rows[0].length];
+    String searchValue = searchField.getText();
+    int i = 0;
+    for(String[] row : rows) {
+      if ((row[1].contains(searchValue) || row[1].contains( filter_model.getText())) && row[2].contains(filter_videocard.getText()) && row[3].contains(filter_ram.getText()) && row[4].contains(filter_memory.getText()) && row[5].contains(filter_processor.getText())) {
+        new_rows[i] = row;
+        i++; 
+      }
+    }
+    while(new_rows[new_rows.length-1][0] == null) {
+      new_rows = Arrays.copyOf(new_rows, new_rows.length-1);
+    }
+    rows = new_rows;
+    String[] columns;
+    if (userIsAdmin()) {
+      columns = adminColumns;
+    } else {
+      columns = userColumns;
+    }
+    tableModel = new DefaultTableModel(rows, columns);
+    window.remove(scrollPane);
+    table = new JTable(tableModel);
+    scrollPane = new JScrollPane(table);
+    table.setFillsViewportHeight(true);
+    table.setAutoCreateRowSorter(true);
+    window.add(BorderLayout.CENTER, scrollPane);
+    SwingUtilities.updateComponentTreeUI(window);
+  }
+
   private void createAction() {
     try {
-      String newComputerParams = ",model:" + model.getText() + ",videocard:" + videocard.getText() + ",ram:" + ram.getText() + ",memory:" + memory.getText() + ",processor:" + processor.getText();
+      String newComputerParams = ",model:" + model.getText() + ",videocard:" + videocard.getText() + ",ram:" + ram.getText() + ",memory:" + memory.getText() + ",processor:" + processor.getText() + ",price:" + price.getText();
       UIClient.send((userData + newComputerParams + ",method:createComputer").getBytes());
       if(Integer.parseInt(new String(UIClient.get()).trim()) > 0) {
         JOptionPane.showMessageDialog(null, "Computer created successfully!");
@@ -346,10 +451,10 @@ class MainWindow {
       String newComputerParams = ",id:" + rows[table.getSelectedRow()][0].toString() +  
         ",model:" + edit_model.getText() + ",videocard:" + edit_videocard.getText() + ",ram:" + 
         edit_ram.getText() + ",memory:" + edit_memory.getText() + ",processor:" +
-        edit_processor.getText() + ",active:" + edit_active.getText() ;
+        edit_processor.getText() + ",active:" + edit_active.getText() + ",price:" + edit_price.getText();
         UIClient.send((userData + newComputerParams + ",method:updateComputer").getBytes());
       if(new String(UIClient.get()).trim().equals("1")) {
-        JOptionPane.showMessageDialog(null, "Deleted successful!");
+        JOptionPane.showMessageDialog(null, "Updated successful!");
         editComputerWindow.setVisible(false);
         selected_element = null;
         reindex();
@@ -380,15 +485,20 @@ class MainWindow {
     edit_memory.setText(selected_element[4].toString());
     edit_processor.setText(selected_element[5].toString());
     edit_active.setText(selected_element[6].toString());
+    edit_active.setText(selected_element[7].toString());
   }
 
   private void reindex() {
     initTableModel();
+    for(String[] row : rows) {
+      System.out.println(String.join("   ", row));
+    }
     
     window.remove(scrollPane);
     table = new JTable(tableModel);
     scrollPane = new JScrollPane(table);
     table.setFillsViewportHeight(true);
+    table.setAutoCreateRowSorter(true);
     window.add(BorderLayout.CENTER, scrollPane);
     SwingUtilities.updateComponentTreeUI(window);
   }

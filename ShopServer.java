@@ -82,13 +82,29 @@ public class ShopServer {
           computer.processor = value;
           break;
         case "active":
-          computer.active = value;
+          computer.active = String.valueOf(Boolean.valueOf(value));
+          break;
+        case "price":
+          computer.price = Integer.parseInt(value);
+          break;
+        case "user_id":
+          user.user_id = value;
+          break;
+        case "user_login":
+          user.user_login = value;
+          break;
+        case "user_password":
+          user.user_password = value;
+          break;
+        case "user_admin":
+          user.user_admin = value;
           break;
         case "method":
           initMethod(value);
           break;
       }
     } catch(Exception e) {
+      System.out.println("==== SERVER INIT PARAMS EXCEPTION ====");
       send("0".getBytes());
     }
   }
@@ -132,7 +148,20 @@ public class ShopServer {
         System.out.println("==== SERVER START MY ORDERS ====");
         send(myOrders().getBytes());
         break;
+      case "indexUsers":
+        System.out.println("==== SERVER START INDEX USERS ====");
+        send(indexUsers().getBytes());
+        break;
+      case "updateUser":
+        System.out.println("==== SERVER START UPDATE USER ====");
+        send(updateUser().getBytes());
+        break;
+      case "deleteUser":
+        System.out.println("==== SERVER START DELETE USER ====");
+        send(deleteUser().getBytes());
+        break;
       default:
+        System.out.println("==== SERVER INIT METHOD EXCEPTION ====");
         send("0".getBytes());
         break;
     }
@@ -165,7 +194,7 @@ public class ShopServer {
       while(myResultSet.next()) {
         String[] row = { myResultSet.getString("id"), myResultSet.getString("model"), 
         myResultSet.getString("videocard"), myResultSet.getString("ram"), 
-        myResultSet.getString("memory"), myResultSet.getString("processor") };
+        myResultSet.getString("memory"), myResultSet.getString("processor"), myResultSet.getString("price") };
         data[i] = String.join("&", row);
         System.out.println(data[i]);
         i++; 
@@ -184,7 +213,8 @@ public class ShopServer {
     try {
       connection.executeUpdate("UPDATE computers SET model='" + computer.model + "', videocard='" + 
         computer.videocard + "', ram=" + String.valueOf(computer.ram) + ", memory=" + 
-        String.valueOf(computer.memory) + ", processor='" + computer.processor + "', active=" + computer.active + " where id=" + String.valueOf(computer.id) + ";");
+        String.valueOf(computer.memory) + ", processor='" + computer.processor + "', active=" + computer.active + 
+        ", price=" + String.valueOf(computer.price) + " where id=" + String.valueOf(computer.id) + ";");
       System.out.println("==== UPDATE COMPUTER TRUE ====");
       return "1";
     } catch(Exception e) {
@@ -205,6 +235,54 @@ public class ShopServer {
     }
   }
 
+  public static String deleteUser() {
+    try {
+      connection.executeUpdate("DELETE FROM users WHERE id=" + user.user_id + ";"); 
+      System.out.println("==== TRUE DELETE USER ====");
+      return "1";
+    } catch(Exception e) {
+      System.out.println("==== DELETE USER EXCEPTION ====");
+      return "0";
+    }
+  }
+
+  public static String indexUsers() {
+    try {
+      String[] data;
+      ResultSet myResultSet = connection.executeQuery(
+        "SELECT COUNT(*) AS count_objects FROM users;"
+      );
+      myResultSet.next();
+      data = new String[myResultSet.getInt("count_objects")];
+      myResultSet = connection.executeQuery("SELECT * FROM users;");
+      int i = 0;
+      while(myResultSet.next()) {
+        String[] row = { myResultSet.getString("id"), myResultSet.getString("login"), 
+          myResultSet.getString("password"), myResultSet.getString("admin")};
+        data[i] = String.join("&", row);
+        System.out.println(data[i]);
+        i++;
+      }
+      return String.join("#", data);
+    } catch(Exception e) {
+      System.out.println("==== INDEX USERS EXCEPTION ====");
+      e.printStackTrace();
+      return "0";
+    }
+  }
+
+  public static String updateUser(){
+    try {
+      connection.executeUpdate("UPDATE users SET login='" + user.user_login + "', password='" + user.user_password + "', admin='" + user.user_admin + "' WHERE id=" + user.user_id + ";");
+      System.out.println("==== UPDATE USER TRUE ====");
+      return "1";
+    } catch(Exception e) {
+      System.out.println("==== SERVER UPDATE USER EXCEPTION ====");
+      e.printStackTrace();
+      return "0";
+    }
+  }
+
   public static String indexComputers() {
     try {
       String[] data;
@@ -219,11 +297,10 @@ public class ShopServer {
         while(myResultSet.next()) {
           String[] row = { myResultSet.getString("id"), myResultSet.getString("model"), 
             myResultSet.getString("videocard"), myResultSet.getString("ram"), 
-            myResultSet.getString("memory"), myResultSet.getString("processor") };
+            myResultSet.getString("memory"), myResultSet.getString("processor"), myResultSet.getString("price") };
           data[i] = String.join("&", row);
           System.out.println(data[i]);
           i++;
-          
         }
       } else {
         ResultSet myResultSet = connection.executeQuery(
@@ -237,11 +314,10 @@ public class ShopServer {
           String[] row = { myResultSet.getString("id"), myResultSet.getString("model"), 
             myResultSet.getString("videocard"), myResultSet.getString("ram"), 
             myResultSet.getString("memory"), myResultSet.getString("processor"), myResultSet.getString("active"),
-            myResultSet.getString("user_id") };
+            myResultSet.getString("user_id"), myResultSet.getString("price") };
           data[i] = String.join("&", row);
           System.out.println(data[i]);
           i++;
-
         }
       }
       return String.join("#", data);
@@ -255,12 +331,13 @@ public class ShopServer {
 
   public static String createComputer() {
     try {
-      connection.executeUpdate("INSERT INTO computers(model, videocard, ram, memory, processor) "
-        + "VALUES ('" + String.join("', '", computer.returnParams()) + "');");
+      connection.executeUpdate("INSERT INTO computers(model, videocard, ram, memory, processor, price, user_id) "
+        + "VALUES ('" + String.join("', '", computer.returnParams()) + "'," + findUser() + ");");
       System.out.println("==== CREATE COMPUTER TRUE ====");
       return "1";
     } catch(Exception e) {
       System.out.println("==== SERVER CREATE COMPUTER EXCEPTION ====");
+      e.printStackTrace();
       return "0";
     }
   }
