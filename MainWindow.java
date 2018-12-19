@@ -8,17 +8,17 @@ class MainWindow {
 
   Object[][] data;
   JFrame window, newComputer, editComputerWindow;
-  JButton addComputer, editComputer, deleteComputer, saveComputer, createComputer, updateComputer;
+  JButton addComputer, editComputer, deleteComputer, saveComputer, createComputer, updateComputer, buyComputer, exitButton, myOrders, shop;
   JTable table;
   DefaultTableModel tableModel;
 
   String[] userColumns = { "Id", "Model", "Video Card", "RAM", "Memory", "Processor" };
-  String[] adminColumns = { "Id", "Model", "Video Card", "RAM", "Memory", "Processor", "Active" };
+  String[] adminColumns = { "Id", "Model", "Video Card", "RAM", "Memory", "Processor", "Active", "User ID" };
   String[][] rows;
   JTextField model, videocard, ram, memory, processor, active,
     edit_model, edit_videocard, edit_ram, edit_memory, edit_processor, edit_active;
   JScrollPane scrollPane;
-  JMenuBar adminMenu;
+  JMenuBar adminMenu, userMenu;
 
   String userData; 
 
@@ -49,11 +49,88 @@ class MainWindow {
     deleteComputer = new JButton("Delete");
     deleteComputer.addActionListener(new ButtonListener());
 
+    exitButton = new JButton("Sign out");
+    exitButton.addActionListener(new ButtonListener());
+
     adminMenu = new JMenuBar();
     adminMenu.add(addComputer);
     adminMenu.add(editComputer);
     adminMenu.add(deleteComputer);
+    adminMenu.add(exitButton);
     window.add(BorderLayout.PAGE_START, adminMenu);
+  }
+
+  private void initUserMenu() {
+    shop = new JButton("Shop");
+    shop.addActionListener(new ButtonListener());
+    
+    buyComputer = new JButton("Buy");
+    buyComputer.addActionListener(new ButtonListener());
+
+    myOrders = new JButton("My orders");
+    myOrders.addActionListener(new ButtonListener());
+
+    exitButton = new JButton("Sign out");
+    exitButton.addActionListener(new ButtonListener());
+
+    userMenu = new JMenuBar();
+    userMenu.add(shop);
+    userMenu.add(buyComputer);
+    userMenu.add(myOrders);
+    userMenu.add(exitButton);
+    window.add(BorderLayout.PAGE_START, userMenu);
+  }
+
+  private void myOrdersAction() {
+    initOrders();
+    String[] columns = userColumns;
+    tableModel = new DefaultTableModel(rows, columns);
+    
+    window.remove(table);
+    table = new JTable(tableModel);
+    //scrollPane = new JScrollPane(table);
+    //table.setFillsViewportHeight(true);
+    window.add(BorderLayout.CENTER, table);
+    SwingUtilities.updateComponentTreeUI(window);
+  }
+
+  private void buyComputerAction() {
+    try {
+      UIClient.send((userData + ",id:" + rows[table.getSelectedRow()][0].toString() + ",method:buyComputer").getBytes());
+      if(new String(UIClient.get()).trim().equals("1")) {
+        JOptionPane.showMessageDialog(null, "The purchase was successful!");
+      } else {
+        JOptionPane.showMessageDialog(null, "Error of purchase!");
+      }
+      reindex();
+    } catch(Exception e) {
+      JOptionPane.showMessageDialog(null, "Error of purchase!");
+    }
+    
+  }
+
+  private void exitAction() {
+    window.setVisible(false);
+    new Authorization();
+  }
+  private void initOrders(){
+    UIClient.send((userData + ",method:myOrders").getBytes());
+    String result = new String(UIClient.get()).trim();
+    System.out.println(result);
+    if (!result.equals("0")) {
+      String[] strings = result.split("#");
+      rows = new String[strings.length][strings[0].split("&").length];
+      System.out.println(strings[0] + " " + rows.length + " " + rows[0].length);
+      for(int i = 0; i < strings.length; i++) {
+        String[] string = strings[i].split("&");
+        for(int j = 0; j < rows[i].length; j++) {
+          rows[i][j] = string[j]; 
+        } 
+      }
+      //rows[0] = strings[0].split("|");
+    } else {
+      JOptionPane.showMessageDialog(null, "Something wrong with DB!");
+    }
   }
 
   private void initRows() {
@@ -101,10 +178,14 @@ class MainWindow {
     window.setLayout(new BorderLayout());
     if (userIsAdmin()) {
       initAdminMenu();
+    } else {
+      initUserMenu();
     }
     initTableModel();
     table = new JTable(tableModel);
-    window.add(BorderLayout.CENTER, table);
+    scrollPane = new JScrollPane(table);
+    table.setFillsViewportHeight(true);
+    window.add(BorderLayout.CENTER, scrollPane);
 
     // newComputer = new JButton("New");
     // newComputer.addActionListener(new ButtonListener());
@@ -226,6 +307,18 @@ class MainWindow {
         case "Delete":
           deleteAction();
           break;
+        case "Buy":
+          buyComputerAction();
+          break;
+        case "My orders":
+          myOrdersAction();
+          break;
+        case "Shop":
+          reindex();
+          break;
+        case "Sign out":
+          exitAction();
+          break;
       }
     }
   }
@@ -253,7 +346,7 @@ class MainWindow {
       String newComputerParams = ",id:" + rows[table.getSelectedRow()][0].toString() +  
         ",model:" + edit_model.getText() + ",videocard:" + edit_videocard.getText() + ",ram:" + 
         edit_ram.getText() + ",memory:" + edit_memory.getText() + ",processor:" +
-        edit_processor.getText() + ",active:" + edit_active.getText();
+        edit_processor.getText() + ",active:" + edit_active.getText() ;
         UIClient.send((userData + newComputerParams + ",method:updateComputer").getBytes());
       if(new String(UIClient.get()).trim().equals("1")) {
         JOptionPane.showMessageDialog(null, "Deleted successful!");
@@ -292,11 +385,11 @@ class MainWindow {
   private void reindex() {
     initTableModel();
     
-    window.remove(table);
+    window.remove(scrollPane);
     table = new JTable(tableModel);
-    //scrollPane = new JScrollPane(table);
-    //table.setFillsViewportHeight(true);
-    window.add(BorderLayout.CENTER, table);
+    scrollPane = new JScrollPane(table);
+    table.setFillsViewportHeight(true);
+    window.add(BorderLayout.CENTER, scrollPane);
     SwingUtilities.updateComponentTreeUI(window);
   }
 }

@@ -98,31 +98,39 @@ public class ShopServer {
     switch(method.trim()) {
       case "findUser":
         System.out.println("==== SERVER START FIND USER ====");
-        send(String.valueOf(findUser()).getBytes());
+        send(findUser().getBytes());
         break;
       case "createUser":
         System.out.println("==== SERVER START CREATE USER ====");
-        send(String.valueOf(createUser()).getBytes());
+        send(createUser().getBytes());
         break;
       case "checkAdmin":
         System.out.println("==== SERVER START CHECK ADMIN ====");
-        send(String.valueOf(checkAdmin()).getBytes());
+        send(checkAdmin().getBytes());
         break;
       case "createComputer":
         System.out.println("==== SERVER START CREATE COMPUTER ====");
-        send(String.valueOf(createComputer()).getBytes());
+        send(createComputer().getBytes());
         break;
       case "indexComputers":
         System.out.println("==== SERVER START INDEX COMPUTERS ====");
-        send(String.valueOf(indexComputers()).getBytes());
+        send(indexComputers().getBytes());
         break;
       case "deleteComputer":
         System.out.println("==== SERVER START DELETE COMPUTER ====");
-        send(String.valueOf(deleteComputer()).getBytes());
+        send(deleteComputer().getBytes());
         break;
       case "updateComputer":
         System.out.println("==== SERVER START UPDATE COMPUTER ====");
-        send(String.valueOf(updateComputer()).getBytes());
+        send(updateComputer().getBytes());
+        break;
+      case "buyComputer":
+        System.out.println("==== SERVER START BUY COMPUTER ====");
+        send(buyComputer().getBytes());
+        break;
+      case "myOrders":
+        System.out.println("==== SERVER START MY ORDERS ====");
+        send(myOrders().getBytes());
         break;
       default:
         send("0".getBytes());
@@ -130,6 +138,48 @@ public class ShopServer {
     }
     //System.out.println("==== NOTHING HAPPANED ====");
   }
+
+  public static String buyComputer() {
+    try {
+      //System.out.println("UPDATE computers SET user_id=" + findUser() + ", active=false WHERE id=" + computer.id + ";");
+      connection.execute("SET FOREIGN_KEY_CHECKS=1;");
+      connection.executeUpdate("UPDATE computers SET user_id=" + findUser() + ", active=false WHERE id=" + computer.id + ";"); 
+      System.out.println("==== TRUE BUY COMPUTER ====");
+      return "1";
+    } catch(Exception e) {
+      System.out.println("==== BUY COMPUTER EXCEPTION ====");
+      e.printStackTrace();
+      return "0";
+    }
+  }
+
+  public static String myOrders() {
+    try {
+      ResultSet myResultSet = connection.executeQuery(
+          "SELECT COUNT(*) AS count_objects FROM computers WHERE user_id=" + findUser() + ";"
+        );
+      myResultSet.next();
+      String[] data = new String[myResultSet.getInt("count_objects")];
+      myResultSet = connection.executeQuery("SELECT * FROM computers WHERE user_id=" + findUser() + ";");
+      int i = 0;
+      while(myResultSet.next()) {
+        String[] row = { myResultSet.getString("id"), myResultSet.getString("model"), 
+        myResultSet.getString("videocard"), myResultSet.getString("ram"), 
+        myResultSet.getString("memory"), myResultSet.getString("processor") };
+        data[i] = String.join("&", row);
+        System.out.println(data[i]);
+        i++; 
+      }
+      
+      System.out.println("==== TRUE MY ORDERS ====");
+      return String.join("#", data);
+    } catch(Exception e) {
+      System.out.println("==== MY ORDERS EXCEPTION ====");
+      e.printStackTrace();
+      return "0";
+    }
+  }
+
   public static String updateComputer(){
     try {
       connection.executeUpdate("UPDATE computers SET model='" + computer.model + "', videocard='" + 
@@ -186,7 +236,8 @@ public class ShopServer {
         while(myResultSet.next()) {
           String[] row = { myResultSet.getString("id"), myResultSet.getString("model"), 
             myResultSet.getString("videocard"), myResultSet.getString("ram"), 
-            myResultSet.getString("memory"), myResultSet.getString("processor"), myResultSet.getString("active") };
+            myResultSet.getString("memory"), myResultSet.getString("processor"), myResultSet.getString("active"),
+            myResultSet.getString("user_id") };
           data[i] = String.join("&", row);
           System.out.println(data[i]);
           i++;
@@ -272,7 +323,7 @@ public class ShopServer {
       );
       System.out.println("SELECT u.id FROM users u WHERE u.login='" + user.login + "' and u.password='" + user.password + "';");
       myResultSet.next();
-      System.out.print(myResultSet.getString("id"));
+      //System.out.print(myResultSet.getString("id"));
       System.out.println("==== FIND USER TRUE ====");
       return myResultSet.getString("id");
       //send(String.valueOf(myResultSet.getString("id")).getBytes());
