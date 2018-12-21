@@ -6,21 +6,21 @@ import javax.swing.*;
 import java.io.*;
 
 public class ShopServer {
-  public final static int DEFAULT_PORT = 8001;//определение порта
+  public final static int DEFAULT_PORT = 8001;
   public static DatagramSocket s;
   private static User user = new User();
   private static Computer computer = new Computer();
   private static DatagramPacket request;
   private static Statement connection;
-  public static void runServer() throws IOException {//метод сервера runServer
+  public static void runServer() throws IOException {
     try {
-      boolean stopFlag = false;//создание флага stopFlag и его инициализация значением false
-      byte[] data;//буфер для приема/передачи дейтаграммы реальному объекту с портом DEFAULT_PORT
-      System.out.println("UDPServer: Started on " + s.getLocalAddress() + ":" + s.getLocalPort()); //вывод к консоль сообщения
-      while(!stopFlag) {//цикл до тех пор, пока флаг не примет значение true
+      boolean stopFlag = false;
+      byte[] data;
+      System.out.println("UDPServer: Started on " + s.getLocalAddress() + ":" + s.getLocalPort());
+      while(!stopFlag) {
         data = new byte[10240];
-        request = new DatagramPacket(data, data.length);//создание объекта дейтаграммы для получения данных
-        s.receive(request);//помещение полученного содержимого в
+        request = new DatagramPacket(data, data.length);
+        s.receive(request);
         try {
           System.out.println(new String(request.getData()).trim());
           for( String param : new String(request.getData()).trim().split(",")) {
@@ -37,12 +37,12 @@ public class ShopServer {
       System.out.println("UDPServer: Stopped");
     } finally {
       if (s != null) {
-        s.close();//закрытие сокета сервера
+        s.close();
       }
     }
   }
 
-  public static void main(String[] args) {//метод main
+  public static void main(String[] args) {
     try {
       s = new DatagramSocket(DEFAULT_PORT);
       Class.forName("com.mysql.jdbc.Driver");
@@ -165,12 +165,10 @@ public class ShopServer {
         send("0".getBytes());
         break;
     }
-    //System.out.println("==== NOTHING HAPPANED ====");
   }
 
   public static String buyComputer() {
     try {
-      //System.out.println("UPDATE computers SET user_id=" + findUser() + ", active=false WHERE id=" + computer.id + ";");
       connection.execute("SET FOREIGN_KEY_CHECKS=1;");
       connection.executeUpdate("UPDATE computers SET user_id=" + findUser() + ", active=false WHERE id=" + computer.id + ";"); 
       System.out.println("==== TRUE BUY COMPUTER ====");
@@ -342,25 +340,6 @@ public class ShopServer {
     }
   }
 
-  // public static String findComputer() {
-  //   try {
-  //     ResultSet myResultSet = connection.executeQuery(
-  //       "SELECT u.id FROM users u WHERE u.login='" + user.login + "' and u.password='" + user.password + "';"
-  //     );
-  //     System.out.println("SELECT u.id FROM users u WHERE u.login='" + user.login + "' and u.password='" + user.password + "';");
-  //     myResultSet.next();
-  //     System.out.print(myResultSet.getString("id"));
-  //     System.out.println("==== FIND USER TRUE ====");
-  //     return myResultSet.getString("id");
-  //     //send(String.valueOf(myResultSet.getString("id")).getBytes());
-  //   } catch(Exception e) {
-  //     System.out.println("==== SERVER FIND USER EXCEPTION ====");
-  //     e.printStackTrace();
-  //     return "0";
-  //     //send("0".getBytes());
-  //   }
-  // }
-
   public static String checkAdmin() {
     try {
       ResultSet myResultSet = connection.executeQuery(
@@ -400,15 +379,12 @@ public class ShopServer {
       );
       System.out.println("SELECT u.id FROM users u WHERE u.login='" + user.login + "' and u.password='" + user.password + "';");
       myResultSet.next();
-      //System.out.print(myResultSet.getString("id"));
       System.out.println("==== FIND USER TRUE ====");
       return myResultSet.getString("id");
-      //send(String.valueOf(myResultSet.getString("id")).getBytes());
     } catch(Exception e) {
       System.out.println("==== SERVER FIND USER EXCEPTION ====");
       e.printStackTrace();
       return "0";
-      //send("0".getBytes());
     }
   }
 
@@ -420,11 +396,9 @@ public class ShopServer {
       myResultSet.next();
       System.out.println("==== SERVER FIND LOGIN TRUE ====");
       return myResultSet.getString("id");
-      //send(String.valueOf(myResultSet.getString("id")).getBytes());
     } catch(Exception e) {
       System.out.println("==== SERVER FIND LOGIN EXCEPTION ====");
       e.printStackTrace();
-      //send("0".getBytes());
       return "0";
     }
   }

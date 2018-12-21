@@ -126,6 +126,9 @@ class MainWindow {
     searchButton.addActionListener(new ButtonListener());
     searchField = new JTextField();
 
+    filterButton = new JButton("Filter");
+    filterButton.addActionListener(new ButtonListener());
+
     exitButton = new JButton("Sign out");
     exitButton.addActionListener(new ButtonListener());
 
@@ -136,6 +139,7 @@ class MainWindow {
     userMenu.add(new JLabel("Search by model: "));
     userMenu.add(searchField);
     userMenu.add(searchButton);
+    userMenu.add(filterButton);
     userMenu.add(exitButton);
     window.add(BorderLayout.PAGE_START, userMenu);
   }
